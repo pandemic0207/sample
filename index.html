@@ -1,3 +1,5 @@
+<!-- 2026-11-28 rev.5 — 신청 버튼 4개(헤더 · ① 첫 화면 · ⑦ 참가비 · ⑨ 마지막)를 누르면 신청 팝업이 열림. 이름 · 연락처 · 이메일(필수) · 소속 · 직위 입력 → [신청하기]로 D1 applicants 표에 저장(functions/api/apply.js) → 같은 팝업에 "신청이 완료되었습니다"와 신청 정보 · [닫기]. 입력 화면은 ✕ · ESC로 닫기. rev.4 토스트는 없앰 -->
+<!-- 2026-11-21 rev.4 — 헤더 [신청하기] · 첫 화면 [지금 신청하기]를 누르면 "신청이 완료되었습니다!" 토스트가 화면 가운데에 떴다가 2.5초 뒤 사라짐 (배경 와인색 #7B1E3A). ⑦ 참가비 · ⑨ 마지막 버튼은 그대로 -->
 <!-- 2026-11-21 rev.3 — 헤더 로고를 배경 투명 · 흰 글씨 로고(hoseo_logo_white.png)로 교체, 흰 박스 없앰, 로고 크기 키움(휴대폰 34px · 컴퓨터 40px) -->
 <!-- 2026-11-21 rev.2 —헤더 글자를 호서대 로고 이미지로 교체(흰 박스) · 첫 화면에 카운트다운 추가(흰 박스, 1초마다 줄어듦) · 첫 화면 [지금 신청하기] 60px로 키우고 카운트다운 박스와 높이 맞춤 · 카운트다운 숫자를 신청 버튼 배경색으로 -->
 <!-- 2026-11-21 rev.1 — 메인페이지 index.html 처음 만듦 (원고 9개 구역 화면만 · 사진 3장 연결 · 기능 없음) -->
@@ -51,7 +53,7 @@
   }
   h3 { margin: 0; line-height: 1.4; text-wrap: balance; }
 
-  /* 버튼 (지금은 모양만) */
+  /* 버튼 (신청 버튼 4개는 누르면 신청 팝업이 열림) */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -364,6 +366,88 @@
   .site-footer p { margin: 0 0 4px; }
   .site-footer .copy { margin-top: 16px; }
 
+  /* [팝업] 신청하기: 페이지 위에 뜨는 창 (입력 화면 → 완료 화면) */
+  body:has(.apply-dialog[open]) { overflow: hidden; } /* 팝업이 열려 있는 동안 뒤 페이지는 스크롤 안 됨 */
+  .apply-dialog {
+    width: min(440px, 100% - 32px);
+    max-height: calc(100% - 32px);
+    margin: auto;
+    padding: 28px 24px 24px;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55), 0 0 60px rgba(124, 92, 255, 0.18);
+    overflow-y: auto;
+  }
+  .apply-dialog::backdrop { background: rgba(4, 3, 15, 0.78); }
+  .apply-dialog[open] { animation: dialog-in 0.18s ease-out; }
+  @keyframes dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+  .dialog-x {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .dialog-x:hover { background: rgba(255, 255, 255, 0.12); color: var(--text); }
+  .dialog-x:focus-visible { outline: 3px solid #d4c8ff; outline-offset: 2px; }
+  .dialog-x svg { width: 20px; height: 20px; }
+  .apply-title { margin: 4px 48px 22px 0; font-size: 1.2rem; line-height: 1.4; letter-spacing: -0.01em; text-align: left; }
+
+  /* 입력 화면 */
+  .field { margin-bottom: 16px; }
+  .field label { display: block; margin-bottom: 6px; font-size: 0.95rem; font-weight: 600; }
+  .req { color: var(--accent-soft); font-size: 0.85rem; }
+  .field input {
+    width: 100%;
+    height: 50px;
+    padding: 0 14px;
+    border: 1px solid rgba(167, 145, 255, 0.28);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 16px; /* 16px보다 작으면 아이폰에서 화면이 확대됨 */
+  }
+  .field input:focus { outline: none; border-color: var(--accent-soft); box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.35); }
+  .field input[aria-invalid="true"] { border-color: #ff8fa3; }
+  .field-error, .form-error { margin: 6px 0 0; color: #ff8fa3; font-size: 0.88rem; }
+  .form-error { margin: 0 0 12px; text-align: center; font-size: 0.92rem; }
+  .field-error:empty, .form-error:empty { display: none; }
+  .apply-submit, .apply-close { width: 100%; margin-top: 8px; }
+  .apply-submit:disabled { opacity: 0.6; cursor: wait; }
+
+  /* 완료 화면 */
+  .done-icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #9077ff, #6a48f5);
+    color: #fff;
+  }
+  .done-icon svg { width: 28px; height: 28px; }
+  .done-title { margin: 0 0 20px; font-size: 1.3rem; font-weight: 800; text-align: center; }
+  .done-info { margin: 0 0 16px; padding: 4px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg); }
+  .done-info div { display: grid; grid-template-columns: 64px 1fr; gap: 12px; padding: 10px 0; }
+  .done-info div + div { border-top: 1px solid var(--line); }
+  .done-info dt { color: var(--muted); }
+  .done-info dd { margin: 0; overflow-wrap: anywhere; }
+  @media (prefers-reduced-motion: reduce) {
+    .apply-dialog[open] { animation: none; }
+  }
+
   /* 컴퓨터 화면 */
   @media (min-width: 760px) {
     section { padding: 104px 0; }
@@ -399,7 +483,7 @@
       <span class="ph">hoseo_logo_white.png</span>
       <img src="images/hoseo_logo_white.png" alt="호서대학교 HOSEO UNIVERSITY" width="470" height="138" onerror="this.parentNode.classList.add('missing'); this.remove()">
     </span>
-    <button type="button" class="btn btn-sm">신청하기</button>
+    <button type="button" class="btn btn-sm js-apply">신청하기</button>
   </div>
 </header>
 
@@ -417,7 +501,7 @@
         <li>👥 선착순 40명</li>
       </ul>
       <div class="cta-row">
-        <button type="button" class="btn btn-lg btn-hero">지금 신청하기</button>
+        <button type="button" class="btn btn-lg btn-hero js-apply">지금 신청하기</button>
         <div class="countdown" role="timer" aria-label="특강 시작까지 남은 시간">
           <span class="cd-title">특강 시작까지</span>
           <span class="cd-unit"><b class="cd-num" id="cd-days">0</b>일</span>
@@ -589,7 +673,7 @@
         <p class="sale-label">특강가</p>
         <p class="sale">39,000원</p>
         <p class="includes">템플릿 30개 · 실습 자료 PDF · 1개월 질문방 포함</p>
-        <button type="button" class="btn btn-light btn-lg">지금 신청하기</button>
+        <button type="button" class="btn btn-light btn-lg js-apply">지금 신청하기</button>
       </div>
     </div>
   </section>
@@ -624,7 +708,7 @@
     <div class="wrap">
       <h2>다음 주부터, 퇴근이 빨라집니다</h2>
       <p>자리가 차면 조기 마감됩니다.</p>
-      <button type="button" class="btn btn-lg">지금 신청하기</button>
+      <button type="button" class="btn btn-lg js-apply">지금 신청하기</button>
     </div>
   </section>
 
@@ -639,6 +723,167 @@
     <p class="copy">© 2026 일잘러랩</p>
   </div>
 </footer>
+
+<!-- [팝업] 신청하기: 신청 버튼 4개 중 아무거나 누르면 열림 (입력 화면 → 완료 화면) -->
+<dialog class="apply-dialog" id="apply-dialog" aria-labelledby="apply-title">
+  <button type="button" class="dialog-x" id="apply-x" aria-label="닫기">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <h2 class="apply-title" id="apply-title">호서대학교 × 일잘러랩 AI 특강</h2>
+
+  <!-- 팝업 – 입력 화면 -->
+  <div id="apply-form-view">
+    <form id="apply-form" novalidate>
+      <div class="field">
+        <label for="f-name">이름 <span class="req">(필수)</span></label>
+        <input id="f-name" name="name" type="text" autocomplete="name" maxlength="50" autofocus aria-describedby="err-name">
+        <p class="field-error" id="err-name"></p>
+      </div>
+      <div class="field">
+        <label for="f-phone">연락처 <span class="req">(필수)</span></label>
+        <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="30" aria-describedby="err-phone">
+        <p class="field-error" id="err-phone"></p>
+      </div>
+      <div class="field">
+        <label for="f-email">이메일 <span class="req">(필수)</span></label>
+        <input id="f-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" aria-describedby="err-email">
+        <p class="field-error" id="err-email"></p>
+      </div>
+      <div class="field">
+        <label for="f-organization">소속</label>
+        <input id="f-organization" name="organization" type="text" autocomplete="organization" maxlength="100">
+      </div>
+      <div class="field">
+        <label for="f-job_title">직위</label>
+        <input id="f-job_title" name="job_title" type="text" autocomplete="organization-title" maxlength="50">
+      </div>
+      <p class="form-error" id="apply-form-error" role="alert"></p>
+      <button type="submit" class="btn apply-submit" id="apply-submit">신청하기</button>
+    </form>
+  </div>
+
+  <!-- 팝업 – 완료 화면 ([신청하기]로 저장된 뒤에 보임) -->
+  <div id="apply-done-view" hidden>
+    <div class="done-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </div>
+    <p class="done-title" role="status">신청이 완료되었습니다</p>
+    <dl class="done-info">
+      <div><dt>이름</dt><dd id="done-name"></dd></div>
+      <div><dt>연락처</dt><dd id="done-phone"></dd></div>
+      <div><dt>이메일</dt><dd id="done-email"></dd></div>
+      <div><dt>소속</dt><dd id="done-organization"></dd></div>
+      <div><dt>직위</dt><dd id="done-job_title"></dd></div>
+    </dl>
+    <button type="button" class="btn apply-close" id="apply-close">닫기</button>
+  </div>
+</dialog>
+
+<!-- 팝업 동작: 열기 · 빈칸 확인 · 저장(/api/apply) · 완료 화면 · 닫기 -->
+<script>
+  (function () {
+    var dialog = document.getElementById("apply-dialog");
+    if (!dialog || typeof dialog.showModal !== "function") return;
+    var form = document.getElementById("apply-form");
+    var formView = document.getElementById("apply-form-view");
+    var doneView = document.getElementById("apply-done-view");
+    var submitBtn = document.getElementById("apply-submit");
+    var formError = document.getElementById("apply-form-error");
+    var FIELDS = ["name", "phone", "email", "organization", "job_title"];
+    var EMAIL_RULE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // 화면에 보이는 안내 문구 (한곳에 모아 둠)
+    var MSG = {
+      name: "이름을 입력해 주세요.",
+      phone: "연락처를 입력해 주세요.",
+      email: "이메일을 입력해 주세요.",
+      emailFormat: "이메일 형식이 올바르지 않아요.",
+      duplicate: "이미 신청한 이메일입니다.",
+      failed: "저장하지 못했어요. 잠시 후 다시 시도해 주세요."
+    };
+
+    function setError(field, text) {
+      document.getElementById("err-" + field).textContent = text;
+      form.elements[field].setAttribute("aria-invalid", "true");
+    }
+
+    function clearErrors() {
+      ["name", "phone", "email"].forEach(function (field) {
+        document.getElementById("err-" + field).textContent = "";
+        form.elements[field].removeAttribute("aria-invalid");
+      });
+      formError.textContent = "";
+    }
+
+    // 팝업 열기: 언제나 빈 입력 화면부터
+    function openDialog() {
+      form.reset();
+      clearErrors();
+      submitBtn.disabled = false;
+      formView.hidden = false;
+      doneView.hidden = true;
+      dialog.showModal();
+    }
+
+    // 완료 화면: 저장된 정보를 보여 줌 (비운 칸은 "-")
+    function showDone(info) {
+      FIELDS.forEach(function (field) {
+        document.getElementById("done-" + field).textContent = info[field] || "-";
+      });
+      formView.hidden = true;
+      doneView.hidden = false;
+      document.getElementById("apply-close").focus();
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      clearErrors();
+
+      var data = {};
+      FIELDS.forEach(function (field) { data[field] = form.elements[field].value.trim(); });
+
+      // 1) 필수 칸 · 이메일 모양 확인
+      var firstWrong = null;
+      if (!data.name) { setError("name", MSG.name); firstWrong = firstWrong || "name"; }
+      if (!data.phone) { setError("phone", MSG.phone); firstWrong = firstWrong || "phone"; }
+      if (!data.email) { setError("email", MSG.email); firstWrong = firstWrong || "email"; }
+      else if (!EMAIL_RULE.test(data.email)) { setError("email", MSG.emailFormat); firstWrong = firstWrong || "email"; }
+      if (firstWrong) { form.elements[firstWrong].focus(); return; }
+
+      // 2) 저장 담당(functions/api/apply.js)에 보내기
+      submitBtn.disabled = true;
+      fetch("/api/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+        .then(function (res) {
+          return res.json().catch(function () { return {}; }).then(function (body) {
+            return { status: res.status, body: body };
+          });
+        })
+        .then(function (r) {
+          if (r.status === 200 && r.body.ok) { showDone(r.body.applicant || data); return; }
+          if (r.status === 409) { setError("email", MSG.duplicate); form.elements.email.focus(); return; }
+          if (r.status === 400 && r.body.error === "required" && MSG[r.body.field]) { setError(r.body.field, MSG[r.body.field]); return; }
+          if (r.status === 400 && r.body.error === "email_format") { setError("email", MSG.emailFormat); return; }
+          formError.textContent = MSG.failed;
+        })
+        .catch(function () { formError.textContent = MSG.failed; })
+        .then(function () { submitBtn.disabled = false; });
+    });
+
+    // 신청 버튼 4개 → 팝업 열기
+    var buttons = document.querySelectorAll(".js-apply");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener("click", openDialog);
+    }
+
+    // 닫기: ✕ 버튼 · 완료 화면 [닫기] (ESC 키는 브라우저가 알아서 닫아 줌)
+    document.getElementById("apply-x").addEventListener("click", function () { dialog.close(); });
+    document.getElementById("apply-close").addEventListener("click", function () { dialog.close(); });
+  })();
+</script>
 
 <!-- 카운트다운 동작: 특강 시작(2026년 12월 12일 오후 2시, 한국 시간)까지 1초마다 숫자 줄이기 -->
 <script>
